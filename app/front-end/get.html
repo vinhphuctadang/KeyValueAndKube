@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+	<body>
+			<label for="key">Key:</label><br>
+			<input type="text" id="key" placeholer="keyname"><br>
+			<label for="value">Value:</label><br>
+			<input type="text" id="value" disabled><br><br>
+			<button onclick="onClick()">GET</button>
+		<p>Click submit to 'GET' to get the value of key</p>
+	</body>
+
+  <script>
+      function onClick(){
+        var key = document.getElementById("key").value
+        var xhttp = new XMLHttpRequest();
+        document.getElementById("value").value = "[Waiting...]"
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+               document.getElementById("value").value = xhttp.responseText
+            }
+        };
+        xhttp.open("GET", "/" + key, true);
+        xhttp.send();
+        return true;
+      }
+  </script>
+</html>
