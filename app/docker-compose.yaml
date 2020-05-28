@@ -1,0 +1,8 @@
+# This compose file is only for testing purpose
+version: '3.2'
+services:
+  database:
+    image: 'mongo'
+    container_name: mongodb
+    ports:
+      - '27017:27017'

@@ -1,0 +1,37 @@
+---
+# Run built node app hello-kube with 3 replica
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: key-value-deployment
+  labels:
+    app: key-value
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: key-value
+  template:
+    metadata:
+      labels:
+        app: key-value
+    spec:
+      containers:
+      - name: key-value
+        image: vinhphuctadang/key-value-server:latest # image is at remote repo
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000 # port 'inside' container
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: key-value-service
+spec:
+  type: ClusterIP
+  selector:
+    app: key-value
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
