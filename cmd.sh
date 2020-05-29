@@ -6,8 +6,9 @@ build(){
 
 start(){
   kubectl create namespace myserver
-  kubectl apply -f deploy.yaml -n myserver
-  kubectl apply -f ingress.yaml -n myserver
+  kubectl apply -f config/server.yaml -n myserver
+  kubectl apply -f config/mongo.yaml -n myserver
+  kubectl apply -f config/ingress.yaml -n myserver
 }
 
 stop(){

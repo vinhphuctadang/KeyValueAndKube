@@ -4,7 +4,7 @@ const router = express.Router()
 
 
 async function set(key, value){
-  let result = await db.KeyValue.findOneAndUpdate({key: key}, {$set: {value: value}}, {upsert: true})
+  await db.KeyValue.findOneAndUpdate({key: key}, {$set: {value: value}}, {new: true, upsert: true})
   return true
 }
 
@@ -15,23 +15,24 @@ async function get(key){
   return result.value
 }
 
-app.get('/:key', async(req, res)=>{
-	let key = req.param.key
-	console.log('Get ' + key)
+router.get('/valueof/:key', async(req, res)=>{
+	let key = req.params.key
+  // console.log('Param',req.param)
+	console.log('Get',key)
   let result
   try {
     result = await get(key)
 	  res.send(result)
-  } catch() {
+  } catch(e) {
     res.send("Not found")
   }
 })
 
-app.post('/', async(req, res)=>{
+router.post('/', async(req, res)=>{
 	let key = req.body.key
 	let value = req.body.value
 	await set(key, value)
-	res.send('Set value of key "' + key + '" to "' + value + '"');
+	res.send('Set value of key "' + key + '" to "' + value + '". Back to <a href="/set.html">set page</a>');
 })
 
 module.exports = router

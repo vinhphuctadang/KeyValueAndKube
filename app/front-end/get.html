@@ -7,6 +7,7 @@
 			<input type="text" id="value" disabled><br><br>
 			<button onclick="onClick()">GET</button>
 		<p>Click submit to 'GET' to get the value of key</p>
+		<p>Or go to <a href="set.html">SET page</a></p>
 	</body>
 
   <script>
@@ -19,7 +20,7 @@
                document.getElementById("value").value = xhttp.responseText
             }
         };
-        xhttp.open("GET", "/" + key, true);
+        xhttp.open("GET", "/valueof/" + key, true);
         xhttp.send();
         return true;
       }
