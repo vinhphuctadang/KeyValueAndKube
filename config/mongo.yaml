@@ -1,5 +1,5 @@
 ---
-# following configuration is recommended by the mongodb page
+# following configuration is recommended by the mongodb page FOR Enterprise MongoDB, or MongoDB Enterprise Kubernetes perator.
 apiVersion: mongodb.com/v1
 kind: MongoDB
 metadata:
@@ -7,7 +7,7 @@ metadata:
   namespace: myserver # match the configmap file
 spec:
   shardCount: 2 # 2 shards
-  mongodsPerShardCount: 3 # 3 daemon controllers / shard
+  mongodsPerShardCount: 2 # 2 daemon controllers / shard
   mongosCount: 2 # mongo router count
   configServerCount: 3
   version: 4.0.6
@@ -16,6 +16,7 @@ spec:
   # credentials: <mycredentials>
   type: ShardedCluster
   persistent: true
+  exposedExternally: true
   # # for tls
   # security:
   #   tls:

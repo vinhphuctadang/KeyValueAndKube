@@ -11,4 +11,5 @@ app.use('/', route)
 
 app.listen(PORT, async =>{
 	console.log('Listening on port', PORT)
+	console.log(`You could go to http://localhost:${PORT}/set.html`)
 })

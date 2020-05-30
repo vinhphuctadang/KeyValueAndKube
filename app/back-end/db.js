@@ -1,6 +1,8 @@
 const mongoose = require('mongoose')
 
-mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versions
+// the line below results in 'wrong' connection for our deployment since 'localhost' is treated as 127.0.0.1, not a name which could be indexed by a DNS
+// mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versionsmongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versions
+mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versionsmongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versions
 var schema = new mongoose.Schema({ key: 'string', value: 'string' });
 var KeyValue = mongoose.model('KeyValue', schema);
 
