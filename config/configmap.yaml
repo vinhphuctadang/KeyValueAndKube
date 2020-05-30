@@ -5,5 +5,5 @@ metadata:
   name: key-value-configmap
   namespace: myserver
 data:
-  projectName: key-value-assignment
+  projectName: key-value-and-kube
   baseUrl: http://key-value.org

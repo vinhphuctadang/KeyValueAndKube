@@ -1,5 +1,5 @@
 build(){
-  docker build -t key-value-server .
+  docker build -t vinhphuctadang/key-value-server .
   # docker save hello-kube:latest | (eval $(minikube docker-env) && docker load) # save to local for minikube to pull, since 'minikube' use different docker env
   docker push vinhphuctadang/key-value-server:latest
 }
@@ -12,8 +12,9 @@ start(){
 }
 
 stop(){
-  kubectl delete -f deploy.yaml -n myserver
-  kubectl delete -f ingress.yaml -n myserver
+  kubectl delete -f config/server.yaml -n myserver
+  kubectl delete -f config/mongo.yaml -n myserver
+  kubectl delete -f config/ingress.yaml -n myserver
   kubectl delete namespace myserver
 }
 
