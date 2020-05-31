@@ -1,5 +1,5 @@
 ---
-# expose mongo-router
+# to expose mongo-router
 apiVersion: v1
 kind: Service
 metadata:
