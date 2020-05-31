@@ -7,13 +7,13 @@ build(){
 start(){
   kubectl create namespace myserver
   kubectl apply -f config/server.yaml -n myserver
-  kubectl apply -f config/mongo.yaml -n myserver
+  # kubectl apply -f config/mongo.yaml -n myserver
   kubectl apply -f config/ingress.yaml -n myserver
 }
 
 stop(){
   kubectl delete -f config/server.yaml -n myserver
-  kubectl delete -f config/mongo.yaml -n myserver
+  # kubectl delete -f config/mongo.yaml -n myserver
   kubectl delete -f config/ingress.yaml -n myserver
   kubectl delete namespace myserver
 }
