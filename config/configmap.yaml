@@ -1,9 +1,0 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: key-value-configmap
-  namespace: myserver
-data:
-  projectName: key-value-and-kube
-  baseUrl: http://key-value.org
