@@ -1,28 +1,28 @@
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-for-db-0
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteOnce
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-for-db-1
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteOnce
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: pv-for-db-0
+#   labels:
+#     type: local
+# spec:
+#   storageClassName: manual
+#   capacity:
+#     storage: 2Gi
+#   accessModes:
+#     - ReadWriteOnce
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: pv-for-db-1
+#   labels:
+#     type: local
+# spec:
+#   storageClassName: manual
+#   capacity:
+#     storage: 2Gi
+#   accessModes:
+#     - ReadWriteOnce
 
 # ---
 # apiVersion: v1
@@ -90,7 +90,7 @@ spec:
       name: my-db-storage
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "manual"
+      storageClassName: ssd
       resources:
         requests:
           storage: 2Gi
@@ -132,7 +132,7 @@ spec:
       name: my-db-storage
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "manual"
+      storageClassName: ssd
       resources:
         requests:
           storage: 2Gi
