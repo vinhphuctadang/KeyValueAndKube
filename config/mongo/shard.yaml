@@ -64,7 +64,7 @@ spec:
       name: my-db-storage
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "my-storage-class"
+      storageClassName: "standard"
       resources:
         requests:
           storage: 2Gi
@@ -106,7 +106,7 @@ spec:
       name: my-db-storage
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: "my-storage-class"
+      storageClassName: "standard" # default gcloud storage class
       resources:
         requests:
           storage: 2Gi
