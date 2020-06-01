@@ -1,3 +1,29 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-db-pvc
+spec:
+  storageClassName: local-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-db-pv
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data/my-database"
+    type: DirectoryOrCreate
+---
 # mongo shards
 apiVersion: apps/v1
 kind: StatefulSet
@@ -32,16 +58,10 @@ spec:
           volumeMounts:
             - name: mongo-persistent-storage
               mountPath: /data/db
-  volumeClaimTemplates:
-  - metadata:
-      name: mongo-persistent-storage
-      annotations:
-        volume.beta.kubernetes.io/storage-class: "fast"
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 2Gi
+      volumes: # use the same 'data storage'
+        - name: persistent-db-storage
+          persistentVolumeClaim:
+            claimName: my-db-pvc
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -75,16 +95,10 @@ spec:
           volumeMounts:
             - name: mongo-persistent-storage
               mountPath: /data/db
-  volumeClaimTemplates:
-  - metadata:
-      name: mongo-persistent-storage
-      annotations:
-        volume.beta.kubernetes.io/storage-class: "fast"
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 2Gi
+      volumes: # use the same 'data storage'
+        - name: persistent-db-storage
+          persistentVolumeClaim:
+            claimName: my-db-pvc
 ---
 # shard services
 # to expose mongo-router
