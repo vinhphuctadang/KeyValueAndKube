@@ -1,5 +1,7 @@
 # This compose file is only for testing purpose
 version: '3.2'
+networks:
+    app_default:
 services:
   database:
     image: 'mongo'

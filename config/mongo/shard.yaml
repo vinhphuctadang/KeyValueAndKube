@@ -1,28 +1,29 @@
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: my-db-pvc
-spec:
-  storageClassName: local-storage
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 2Gi
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: my-db-pv
-spec:
-  storageClassName: local-storage
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/mnt/data/my-database"
-    type: DirectoryOrCreate
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: my-db-pvc
+# spec:
+#   storageClassName: local-storage
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 2Gi
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: persistent-db-storage
+# spec:
+#   storageClassName: local-storage
+#   capacity:
+#     storage: 2Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   hostPath:
+#     path: "/mnt/data/my-database"
+#     type: DirectoryOrCreate
 ---
 # mongo shards
 apiVersion: apps/v1
@@ -33,7 +34,7 @@ metadata:
     name: mongo-shard0
 spec:
   serviceName: "shard0-service"
-  replicas: 2
+  replicas: 1 # for simplicy, without creating many volume
   selector:
     matchLabels: # TODO: Explore more about this selector's selection behavior
       name: mongo-shard0
@@ -56,12 +57,17 @@ spec:
           ports:
             - containerPort: 27017
           volumeMounts:
-            - name: mongo-persistent-storage
+            - name: my-db-storage
               mountPath: /data/db
-      volumes: # use the same 'data storage'
-        - name: persistent-db-storage
-          persistentVolumeClaim:
-            claimName: my-db-pvc
+  volumeClaimTemplates:
+  - metadata:
+      name: my-db-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "my-storage-class"
+      resources:
+        requests:
+          storage: 2Gi
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -71,7 +77,7 @@ metadata:
     name: mongo-shard1
 spec:
   serviceName: "shard1-service"
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       name: mongo-shard1
@@ -93,12 +99,17 @@ spec:
           ports:
             - containerPort: 27017
           volumeMounts:
-            - name: mongo-persistent-storage
+            - name: my-db-storage
               mountPath: /data/db
-      volumes: # use the same 'data storage'
-        - name: persistent-db-storage
-          persistentVolumeClaim:
-            claimName: my-db-pvc
+  volumeClaimTemplates:
+  - metadata:
+      name: my-db-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "my-storage-class"
+      resources:
+        requests:
+          storage: 2Gi
 ---
 # shard services
 # to expose mongo-router
