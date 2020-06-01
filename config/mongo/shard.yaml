@@ -1,3 +1,17 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-for-db
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
 # ---
 # apiVersion: v1
 # kind: PersistentVolumeClaim
@@ -67,7 +81,7 @@ spec:
       storageClassName: "standard"
       resources:
         requests:
-          storage: 2Gi
+          storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -109,7 +123,7 @@ spec:
       storageClassName: "standard" # default gcloud storage class
       resources:
         requests:
-          storage: 2Gi
+          storage: 1Gi
 ---
 # shard services
 # to expose mongo-router
