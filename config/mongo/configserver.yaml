@@ -1,21 +1,29 @@
 ---
-# mongo config server
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
-serviceName: mongodb-configdb-service
 metadata:
   name: mongod-configdb
 spec:
+  serviceName: "mongodb-configdb-service"
   replicas: 2
-  containers:
-  - name: mongod-configdb-container
-    image: mongo
-    command:
-      - "mongod"
-      - "--port"
-      - "27017"
-      - "--configsvr"
-      - "--replSet configserver"
+  selector:
+    matchLabels:
+      name: mongo-configdb
+  template:
+    metadata:
+      labels:
+        name: mongo-configdb
+    spec:
+      containers:
+      - name: mongod-configdb-container
+        image: mongo
+        command:
+          - "mongod"
+          - "--port"
+          - "27017"
+          - "--configsvr"
+          - "--replSet"
+          - "configserver"
 ---
 # expose config servers
 apiVersion: v1
@@ -23,11 +31,11 @@ kind: Service
 metadata:
   name: mongodb-configdb-service
   labels:
-    name: mongo
+    name: mongo-configdb
 spec:
   ports:
   - port: 27017
     targetPort: 27017
   clusterIP: None
   selector:
-    name: mongos
+    name: mongod-configdb
