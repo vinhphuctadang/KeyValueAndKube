@@ -1,29 +1,35 @@
-# apiVersion: v1
-# kind: PersistentVolume
-# metadata:
-#   name: pv-for-db-0
-#   labels:
-#     type: local
-# spec:
-#   storageClassName: manual
-#   capacity:
-#     storage: 2Gi
-#   accessModes:
-#     - ReadWriteOnce
-# ---
-# apiVersion: v1
-# kind: PersistentVolume
-# metadata:
-#   name: pv-for-db-1
-#   labels:
-#     type: local
-# spec:
-#   storageClassName: manual
-#   capacity:
-#     storage: 2Gi
-#   accessModes:
-#     - ReadWriteOnce
-
+---
+# first create 2 static persistent volume, it could be bad in practice,
+# but for demo purpose when there is no service which helps dynamically allocate volume, I personally think this is a reasonable choice
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-for-db-0
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath: # Won't work in 'multinode' deployment
+    path: /data/db
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-for-db-1
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/db
 # ---
 # apiVersion: v1
 # kind: PersistentVolumeClaim
@@ -90,7 +96,7 @@ spec:
       name: my-db-storage
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: ssd
+      storageClassName: manual # in practice, change the class name to the storage provision classname to dynamically allocate disk space for the replica
       resources:
         requests:
           storage: 2Gi
@@ -127,12 +133,12 @@ spec:
           volumeMounts:
             - name: my-db-storage
               mountPath: /data/db
-  volumeClaimTemplates:
+  volumeClaimTemplates: # this volume claim will find best suitable volume
   - metadata:
       name: my-db-storage
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: ssd
+      storageClassName: manual
       resources:
         requests:
           storage: 2Gi
