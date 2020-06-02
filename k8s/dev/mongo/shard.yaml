@@ -10,10 +10,11 @@ spec:
   serviceName: "shard0-service"
   replicas: 1 # for simplicy, without creating many volume
   selector:
-    matchLabels: # TODO: Explore more about this selector's selection behavior
+    matchLabels: # This will search for matched pod's label having matched 'name' value in the 'set of labels'
       name: mongo-shard0
   template:
     metadata:
+      name: mongo-shard0
       labels:
         name: mongo-shard0
     spec:
@@ -61,6 +62,7 @@ spec:
       name: mongo-shard1
   template:
     metadata:
+      name: mongo-shard1
       labels:
         name: mongo-shard1
     spec:

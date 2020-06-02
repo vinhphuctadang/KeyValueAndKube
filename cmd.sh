@@ -27,7 +27,7 @@ migrate(){ # migrate from docker --> minikube
 start(){
   echo "Create server namespace called '${NAMESPACE}'"
   kubectl create namespace $NAMESPACE
-  kubectl apply -f ${MUTAL_VOLUME} -n $NAMESPACE
+  kubectl apply -f ${MUTAL_VOLUME} -n $NAMESPACE # create a 'mutal' volume, will be referred by configservers, shards and mongo routers
   kubectl apply -f ${MONGO_CFG_SERVER} -n $NAMESPACE # start mongo config servers and their service
   kubectl apply -f ${MONGO_SHARD} -n $NAMESPACE # start 2 shards with persistent volumes
   kubectl apply -f ${MONGO_ROUTER} -n $NAMESPACE # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
@@ -35,7 +35,14 @@ start(){
   kubectl apply -f ${INGRESS} -n $NAMESPACE
 
   kubectl cp ${SCRIPT_DIR} pod/mongod-configdb-0:/config -n $NAMESPACE
+  # afterward
+  # use for loop instead
+  kubectl exec pod/mongo-shard0-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-shard0.js"
+  kubectl exec pod/mongo-shard1-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-shard1.js"
+  kubectl exec pod/mongod-configdb-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-configserver.js"
+  kubectl exec pod/mongod-configdb-1 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-configserver.js"
 
+  
 }
 
 stop(){
