@@ -51,6 +51,8 @@ copyScripts(){
 mongoInit(){
   echo "First copy k8s/scripts to created config-volume"
   copyScripts
+  echo "Then waiting for 30s for mongo components to complete boot up"
+  sleep 30
 
   kubectl exec pod/mongod-configdb-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-configserver.js" # init on one replica only
   # afterward
@@ -58,12 +60,13 @@ mongoInit(){
   kubectl exec pod/mongo-shard0-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-shard0.js"
   kubectl exec pod/mongo-shard1-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-shard1.js"
 
-  
+
   kubectl exec $(kubectl get pod -l "name=mongos" -n $NAMESPACE -o name) \
     -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-router.js"
 
   kubectl exec $(kubectl get pod -l "name=mongos" -n $NAMESPACE -o name) \
     -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-collection.js"
+  echo "In case this script failed, mostly because components are not booting up completely, you should run ./cmd.sh mongoInit again"
 }
 
 waitAndInit(){

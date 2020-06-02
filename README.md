@@ -35,14 +35,21 @@ First look at the following notes:
   ``sudo apt install docker.io``
 
 - kubectl and minikube (for local tests):
-  Follow instruction here
+  Please follow instruction on kubernetes.io homepage
 
 - An account on ``hub.docker.com`` if you would like to explore **step 1**
+
+- Do not forget to turn on 'ingress addons' for minikub:
+  ``minikube addons enable ingress``
+
 
 **Steps for app deployment**
 1. Generate app image (optional, means that you could skip this step as you do not care about containerizing step, I've built an image for following step):
   - I have a Dockerfile which describe and build our 'app' image, just run ``./cmd.sh build``
+
   *Notes: In ./cmd.sh build, the script uses my own credentials (as vinhphuctadang) for logging into 'dockerhub' to push image onto the hub; to make it your own, please custom the name 'vinhphuctadang' to your 'dockerhub' account in order to have the built image pushed, and if you made changes, you should then edit config/server.yaml for correct image which matches your built image*
+
+
   **Modify config/server.yaml if you build your own image, at the line where**
 ```
   image: vinhphuctadang/key-value-server:latest
@@ -63,9 +70,14 @@ kubectl apply -f config/mongo/router.yaml -n myserver # start mongo router for e
 kubectl apply -f config/server.yaml -n myserver # start the node app, as a server configured in server.yaml
 kubectl apply -f config/ingress.yaml -n myserver # ingress for accessing the server app over internet
 ```
-3. Now just go to browser:
+3. Inspect the address of our server ingress:
+  ``kubectl get ingress -n myserver`` (since our namespace has only one ingress, there is only one externally visible IP address)
 
-
+Example:
+```
+NAME                CLASS    HOSTS   ADDRESS      PORTS   AGE
+key-value-ingress   <none>   *       172.17.0.3   80      21m
+```
 # Common failure:
 
 ## More about application deployment and devops???
