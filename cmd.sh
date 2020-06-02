@@ -23,8 +23,13 @@ migrate(){ # migrate from docker --> minikube
 }
 
 serverInit(){
+  minikube addons enable ingress # enable ingress in order to make server externally visible
   kubectl apply -f ${SERVER} -n $NAMESPACE
   kubectl apply -f ${INGRESS} -n $NAMESPACE
+  echo "Sleep for server booting up"
+  sleep 5
+  echo "======= Ingress information ======="
+  kubectl get ingress -n $NAMESPACE
 }
 
 bootUp(){
@@ -49,10 +54,11 @@ copyScripts(){
 }
 
 mongoInit(){
-  echo "First copy k8s/scripts to created config-volume"
-  copyScripts
-  echo "Then waiting for 30s for mongo components to complete boot up"
+
+  echo "Waiting for 30s for mongo components to complete boot up"
   sleep 30
+  echo "Next copy k8s/scripts to created config-volume"
+  copyScripts
 
   kubectl exec pod/mongod-configdb-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-configserver.js" # init on one replica only
   # afterward

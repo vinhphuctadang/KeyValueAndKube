@@ -37,11 +37,7 @@ First look at the following notes:
 - kubectl and minikube (for local tests):
   Please follow instruction on kubernetes.io homepage
 
-- An account on ``hub.docker.com`` if you would like to explore **step 1**
-
-- Do not forget to turn on 'ingress addons' for minikub:
-  ``minikube addons enable ingress``
-
+  - An account on ``hub.docker.com`` if you would like to explore **step 1**
 
 **Steps for app deployment**
 1. Generate app image (optional, means that you could skip this step as you do not care about containerizing step, I've built an image for following step):
@@ -77,6 +73,11 @@ Example:
 ```
 NAME                CLASS    HOSTS   ADDRESS      PORTS   AGE
 key-value-ingress   <none>   *       172.17.0.3   80      21m
+```
+4. Stop server:
+```
+./cmd.sh stop
+./cmd.sh clean
 ```
 # Common failure:
 
