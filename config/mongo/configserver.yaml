@@ -11,6 +11,7 @@ spec:
       name: mongod-configdb
   template:
     metadata:
+      name: mongod-configdb
       labels:
         name: mongod-configdb
     spec:
