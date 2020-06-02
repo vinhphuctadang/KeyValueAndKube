@@ -23,12 +23,13 @@ spec:
         - name: mongo
           image: mongo
           command:
-            - mongod
+            - "mongod"
             - "--port"
             - "27017"
             - "--shardsvr"
             - "--replSet"
             - "shard0"
+            - "--bind_ip_all" # to listen on all available network interface
           ports:
             - containerPort: 27017
           volumeMounts:
@@ -36,11 +37,15 @@ spec:
               mountPath: /data/db
             - name: config-volume
               mountPath: /config
+      volumes:
+        - name: config-volume
+          persistentVolumeClaim:
+            claimName: config-volume
   volumeClaimTemplates:
   - metadata:
       name: my-db-storage
-      annotations:
-        volume.beta.kubernetes.io/storage-class: "ssd"
+      # annotations:
+      #   volume.beta.kubernetes.io/storage-class: "ssd"
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: standard
@@ -69,14 +74,15 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
+          image: mongo
           command:
-            image: mongo
             - mongod
             - "--port"
             - "27017"
             - "--shardsvr"
             - "--replSet"
             - "shard1"
+            - "--bind_ip_all"
           ports:
             - containerPort: 27017
           volumeMounts:
@@ -84,11 +90,15 @@ spec:
               mountPath: /data/db
             - name: config-volume
               mountPath: /config
+      volumes:
+        - name: config-volume
+          persistentVolumeClaim:
+            claimName: config-volume
   volumeClaimTemplates:
   - metadata:
       name: my-db-storage
-      annotations:
-        volume.beta.kubernetes.io/storage-class: "ssd"
+      # annotations:
+      #   volume.beta.kubernetes.io/storage-class: "ssd"
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: standard

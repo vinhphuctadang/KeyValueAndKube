@@ -1,6 +1,5 @@
-'''
-CONSTANTS
-'''
+
+# CONSTANTS
 MONGO_CFG_SERVER="k8s/dev/mongo/configserver.yaml"
 MONGO_SHARD="k8s/dev/mongo/shard.yaml"
 MONGO_ROUTER="k8s/dev/mongo/router.yaml"
@@ -23,7 +22,7 @@ migrate(){ # migrate from docker --> minikube
   docker save ${img} | (eval $(minikube docker-env) && docker load)
 }
 
-start(){
+bootUp(){
   echo "Create server namespace called '${NAMESPACE}'"
   kubectl create namespace $NAMESPACE
   kubectl apply -f ${MUTAL_VOLUME} -n $NAMESPACE # create a 'mutal' volume, will be referred by configservers, shards and mongo routers
@@ -32,17 +31,46 @@ start(){
   kubectl apply -f ${MONGO_ROUTER} -n $NAMESPACE # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
   kubectl apply -f ${SERVER} -n $NAMESPACE
   kubectl apply -f ${INGRESS} -n $NAMESPACE
+}
 
-  kubectl cp ${SCRIPT_DIR} pod/mongod-configdb-0:/config -n $NAMESPACE
+waitBootComplete(){
+  while [[ $(kubectl get pod -n myserver -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') == *"False"* ]]; do
+    echo "Sleep 1 second and while waiting for components to complete booting up"
+    sleep 1
+  done
+}
+
+copyScripts(){
+  echo "Copying mongo init scripts to config-volume volume (via POD mongod-configdb-0)"
+  kubectl cp ${SCRIPT_DIR} mongod-configdb-0:/config -n $NAMESPACE
+}
+
+mongoInit(){
+  echo "First copy k8s/scripts to created config-volume"
+  copyScripts
+
+  kubectl exec pod/mongod-configdb-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-configserver.js" # init on one replica only
   # afterward
   # use for loop instead
-  kubectl exec pod/mongo-shard0-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-shard0.js"
-  kubectl exec pod/mongo-shard1-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-shard1.js"
-  kubectl exec pod/mongod-configdb-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-configserver.js"
-  kubectl exec pod/mongod-configdb-1 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-configserver.js"
+  kubectl exec pod/mongo-shard0-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-shard0.js"
+  kubectl exec pod/mongo-shard1-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-shard1.js"
 
-  kubectl exec $(kubectl get pod -l "name=mongos" -o name) \
-    -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-collection.js"
+
+  kubectl exec $(kubectl get pod -l "name=mongos" -n myserver -o name) \
+    -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-router.js"
+    
+  kubectl exec $(kubectl get pod -l "name=mongos" -n myserver -o name) \
+    -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-collection.js"
+}
+
+waitAndInit(){
+  waitBootComplete
+  mongoInit
+}
+
+start(){
+  bootUp
+  waitAndInit
 }
 
 stop(){
@@ -83,10 +111,21 @@ case $CMD in
     clean
     ;;
 
+  "waitAndInit")
+    waitAndInit
+    ;;
+
+  "mongoInit")
+    echo "Initializing mongo..."
+    mongoInit
+    ;;
+  "copyScripts")
+    copyScripts
+    ;;
+
   "migrate")
     migrate
     ;;
-
 
   *)
     echo "unknown command"

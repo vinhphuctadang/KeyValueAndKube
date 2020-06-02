@@ -1,14 +1,14 @@
 apiVersion: v1
-kind: PersistentVolume
+kind: PersistentVolumeClaim
 metadata:
   name: config-volume
 spec:
-  capacity:
-    storage: 2Mi
-  volumeMode: Filesystem
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 3Mi
   accessModes:
     - ReadWriteMany
-  persistentVolumeReclaimPolicy: Recycle
   storageClassName: standard
   # hostPath: # Not good in product
   #   - ~/projects/KeyValueAndKube/k8s/scripts

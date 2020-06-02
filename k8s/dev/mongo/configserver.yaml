@@ -25,9 +25,14 @@ spec:
           - "--configsvr"
           - "--replSet"
           - "configserver"
+          - "--bind_ip_all"
         volumeMounts:
           - name: config-volume
             mountPath: /config
+      volumes:
+        - name: config-volume # mutal volume containning config scripts
+          persistentVolumeClaim:
+            claimName: config-volume
 ---
 # expose config servers
 apiVersion: v1
