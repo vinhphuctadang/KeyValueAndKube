@@ -3,7 +3,7 @@
 ## Structure:
 
 **The system is composed of:**
-- 3 pods running the main app (explore /app for details) with its static volume (node app won't make any changes to its volume).
+- 2 pods running the main app (explore /app for details) with its static volume (node app won't make any changes to its volume).
 - Sharded mongodb:
   The db system has:
   - 2 shards, 1 replica for each shard, 1 persistent volume for each replica
