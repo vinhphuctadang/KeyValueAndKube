@@ -88,6 +88,8 @@ spec:
   volumeClaimTemplates:
   - metadata:
       name: my-db-storage
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "ssd"
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: ssd
@@ -130,6 +132,8 @@ spec:
   volumeClaimTemplates:
   - metadata:
       name: my-db-storage
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "ssd"
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: ssd
