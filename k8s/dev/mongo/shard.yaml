@@ -33,6 +33,8 @@ spec:
           volumeMounts:
             - name: my-db-storage
               mountPath: /data/db
+            - name: config-volume
+              mountPath: /config
   volumeClaimTemplates:
   - metadata:
       name: my-db-storage
@@ -78,6 +80,8 @@ spec:
           volumeMounts:
             - name: my-db-storage
               mountPath: /data/db
+            - name: config-volume
+              mountPath: /config
   volumeClaimTemplates:
   - metadata:
       name: my-db-storage

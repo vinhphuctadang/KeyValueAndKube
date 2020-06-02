@@ -5,11 +5,12 @@ CONSTANTS
 MONGO_CFG_SERVER="k8s/dev/mongo/configserver.yaml"
 MONGO_SHARD="k8s/dev/mongo/shard.yaml"
 MONGO_ROUTER="k8s/dev/mongo/router.yaml"
-MUTAL_VOLUME="k8s/dev/config-volume.yaml"
 
+MUTAL_VOLUME="k8s/dev/config-volume.yaml"
 SERVER="k8s/dev/server.yaml"
 INGRESS="k8s/dev/ingress.yaml"
 NAMESPACE="myserver"
+SCRIPT_DIR="k8s/scripts"
 
 build(){
   docker build -t vinhphuctadang/key-value-server .
@@ -24,27 +25,32 @@ migrate(){ # migrate from docker --> minikube
 }
 
 start(){
-  kubectl create namespace myserver
-  kubectl apply -f ${MONGO_CFG_SERVER} -n myserver # start mongo config servers and their service
-  kubectl apply -f ${MONGO_SHARD} -n myserver # start 2 shards with persistent volumes
-  kubectl apply -f ${MONGO_ROUTER} -n myserver # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
-  kubectl apply -f ${SERVER} -n myserver
-  kubectl apply -f ${INGRESS} -n myserver
-  kubectl apply -f ${MUTAL_VOLUME} -n myserver
+  echo "Create server namespace called '${NAMESPACE}'"
+  kubectl create namespace $NAMESPACE
+  kubectl apply -f ${MUTAL_VOLUME} -n $NAMESPACE
+  kubectl apply -f ${MONGO_CFG_SERVER} -n $NAMESPACE # start mongo config servers and their service
+  kubectl apply -f ${MONGO_SHARD} -n $NAMESPACE # start 2 shards with persistent volumes
+  kubectl apply -f ${MONGO_ROUTER} -n $NAMESPACE # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
+  kubectl apply -f ${SERVER} -n $NAMESPACE
+  kubectl apply -f ${INGRESS} -n $NAMESPACE
+
+  kubectl cp ${SCRIPT_DIR} pod/mongod-configdb-0:/config -n $NAMESPACE
+
 }
 
 stop(){
-  kubectl delete -f ${MONGO_CFG_SERVER} -n myserver
-  kubectl delete -f ${MONGO_SHARD} -n myserver
-  kubectl delete -f ${MONGO_ROUTER} -n myserver
-  kubectl delete -f ${SERVER} -n myserver
-  kubectl delete -f ${INGRESS} -n myserver
+  kubectl delete -f ${MONGO_CFG_SERVER} -n $NAMESPACE
+  kubectl delete -f ${MONGO_SHARD} -n $NAMESPACE
+  kubectl delete -f ${MONGO_ROUTER} -n $NAMESPACE
+  kubectl delete -f ${SERVER} -n $NAMESPACE
+  kubectl delete -f ${INGRESS} -n $NAMESPACE
+  kubectl delete -f ${MUTAL_VOLUME} -n $NAMESPACE
 
-  kubectl delete namespace myserver
+  kubectl delete namespace $NAMESPACE
 }
 
 clean(){
-	kubectl delete all --all -n myserver
+	kubectl delete all --all -n $NAMESPACE
 }
 
 CMD=$1
@@ -66,7 +72,7 @@ case $CMD in
     ;;
 
   "clean")
-    echo "Cleaning up server named 'myserver'"
+    echo "Cleaning up server named '${NAMESPACE}'"
     clean
     ;;
 

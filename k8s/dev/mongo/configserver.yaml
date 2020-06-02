@@ -11,6 +11,7 @@ spec:
       name: mongod-configdb
   template:
     metadata:
+      name: mongod-configdb
       labels:
         name: mongod-configdb
     spec:
@@ -24,6 +25,9 @@ spec:
           - "--configsvr"
           - "--replSet"
           - "configserver"
+        volumeMounts:
+          - name: config-volume
+            mountPath: /config
 ---
 # expose config servers
 apiVersion: v1

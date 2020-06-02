@@ -10,3 +10,5 @@ spec:
     - ReadWriteMany
   persistentVolumeReclaimPolicy: Recycle
   storageClassName: standard
+  # hostPath: # Not good in product
+  #   - ~/projects/KeyValueAndKube/k8s/scripts
