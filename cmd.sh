@@ -1,3 +1,16 @@
+'''
+CONSTANTS
+'''
+
+MONGO_CFG_SERVER="k8s/dev/mongo/configserver.yaml"
+MONGO_SHARD="k8s/dev/mongo/shard.yaml"
+MONGO_ROUTER="k8s/dev/mongo/router.yaml"
+MUTAL_VOLUME="k8s/dev/config-volume.yaml"
+
+SERVER="k8s/dev/server.yaml"
+INGRESS="k8s/dev/ingress.yaml"
+NAMESPACE="myserver"
+
 build(){
   docker build -t vinhphuctadang/key-value-server .
   # docker save hello-kube:latest | (eval $(minikube docker-env) && docker load) # save to local for minikube to pull, since 'minikube' use different docker env
@@ -12,39 +25,28 @@ migrate(){ # migrate from docker --> minikube
 
 start(){
   kubectl create namespace myserver
-  kubectl apply -f config/mongo/configserver.yaml -n myserver # start mongo config servers and their service
-  kubectl apply -f config/mongo/shard.yaml -n myserver # start 2 shards with persistent volumes
-  kubectl apply -f config/mongo/router.yaml -n myserver # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
-  kubectl apply -f config/server.yaml -n myserver
-  kubectl apply -f config/ingress.yaml -n myserver
-
-  # there is another way: create a volume where we could place config together, but not in the following implementation
-
-  kubectl cp ./config/mongo/init-shard0.js myserver/mongo-shard0-0:/init.js # copy init file to servers
-  kubectl cp ./config/mongo/init-shard1.js myserver/mongo-shard1-0:/init.js # copy init file to servers, copy to all of its replica
-
-  kubectl cp ./config/mongo/init-configserver.js myserver/mongod-configdb-0:/init.js
-  kubectl cp ./config/mongo/init-configserver.js myserver/mongod-configdb-1:/init.js
-
-  kubectl exec -it pod/mongo-shard0-0 -n myserver -- sh -c "mongo --port 27017 < init.js"
-  kubectl exec -it pod/mongo-shard1-0 -n myserver -- sh -c "mongo --port 27017 < init.js"
-  kubectl exec -it pod/mongod-configdb-0 -n myserver -- sh -c "mongo --port 27017 < init.js"
-  kubectl exec -it pod/mongod-configdb-1 -n myserver -- sh -c "mongo --port 27017 < init.js"
+  kubectl apply -f ${MONGO_CFG_SERVER} -n myserver # start mongo config servers and their service
+  kubectl apply -f ${MONGO_SHARD} -n myserver # start 2 shards with persistent volumes
+  kubectl apply -f ${MONGO_ROUTER} -n myserver # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
+  kubectl apply -f ${SERVER} -n myserver
+  kubectl apply -f ${INGRESS} -n myserver
+  kubectl apply -f ${MUTAL_VOLUME} -n myserver
 }
 
 stop(){
-  kubectl delete -f config/mongo/configserver.yaml -n myserver
-  kubectl delete -f config/mongo/shard.yaml -n myserver
-  kubectl delete -f config/mongo/router.yaml -n myserver
+  kubectl delete -f ${MONGO_CFG_SERVER} -n myserver
+  kubectl delete -f ${MONGO_SHARD} -n myserver
+  kubectl delete -f ${MONGO_ROUTER} -n myserver
+  kubectl delete -f ${SERVER} -n myserver
+  kubectl delete -f ${INGRESS} -n myserver
 
-  kubectl delete -f config/server.yaml -n myserver
-  kubectl delete -f config/ingress.yaml -n myserver
   kubectl delete namespace myserver
 }
 
 clean(){
 	kubectl delete all --all -n myserver
 }
+
 CMD=$1
 
 case $CMD in

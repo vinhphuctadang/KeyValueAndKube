@@ -65,8 +65,8 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
-          image: mongo
           command:
+            image: mongo
             - mongod
             - "--port"
             - "27017"
