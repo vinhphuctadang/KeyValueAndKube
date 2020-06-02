@@ -8,11 +8,11 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      name: mongo-configdb
+      name: mongod-configdb
   template:
     metadata:
       labels:
-        name: mongo-configdb
+        name: mongod-configdb
     spec:
       containers:
       - name: mongod-configdb-container
