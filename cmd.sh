@@ -1,3 +1,16 @@
+'''
+CONSTANTS
+'''
+MONGO_CFG_SERVER="k8s/dev/mongo/configserver.yaml"
+MONGO_SHARD="k8s/dev/mongo/shard.yaml"
+MONGO_ROUTER="k8s/dev/mongo/router.yaml"
+
+MUTAL_VOLUME="k8s/dev/config-volume.yaml"
+SERVER="k8s/dev/server.yaml"
+INGRESS="k8s/dev/ingress.yaml"
+NAMESPACE="myserver"
+SCRIPT_DIR="k8s/scripts"
+
 build(){
   docker build -t vinhphuctadang/key-value-server .
   # docker save hello-kube:latest | (eval $(minikube docker-env) && docker load) # save to local for minikube to pull, since 'minikube' use different docker env
@@ -11,40 +24,42 @@ migrate(){ # migrate from docker --> minikube
 }
 
 start(){
-  kubectl create namespace myserver
-  kubectl apply -f config/mongo/configserver.yaml -n myserver # start mongo config servers and their service
-  kubectl apply -f config/mongo/shard.yaml -n myserver # start 2 shards with persistent volumes
-  kubectl apply -f config/mongo/router.yaml -n myserver # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
-  kubectl apply -f config/server.yaml -n myserver
-  kubectl apply -f config/ingress.yaml -n myserver
+  echo "Create server namespace called '${NAMESPACE}'"
+  kubectl create namespace $NAMESPACE
+  kubectl apply -f ${MUTAL_VOLUME} -n $NAMESPACE # create a 'mutal' volume, will be referred by configservers, shards and mongo routers
+  kubectl apply -f ${MONGO_CFG_SERVER} -n $NAMESPACE # start mongo config servers and their service
+  kubectl apply -f ${MONGO_SHARD} -n $NAMESPACE # start 2 shards with persistent volumes
+  kubectl apply -f ${MONGO_ROUTER} -n $NAMESPACE # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
+  kubectl apply -f ${SERVER} -n $NAMESPACE
+  kubectl apply -f ${INGRESS} -n $NAMESPACE
 
-  # there is another way: create a volume where we could place config together, but not in the following implementation
+  kubectl cp ${SCRIPT_DIR} pod/mongod-configdb-0:/config -n $NAMESPACE
+  # afterward
+  # use for loop instead
+  kubectl exec pod/mongo-shard0-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-shard0.js"
+  kubectl exec pod/mongo-shard1-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-shard1.js"
+  kubectl exec pod/mongod-configdb-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-configserver.js"
+  kubectl exec pod/mongod-configdb-1 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-configserver.js"
 
-  kubectl cp ./config/mongo/init-shard0.js myserver/mongo-shard0-0:/init.js # copy init file to servers
-  kubectl cp ./config/mongo/init-shard1.js myserver/mongo-shard1-0:/init.js # copy init file to servers, copy to all of its replica
-
-  kubectl cp ./config/mongo/init-configserver.js myserver/mongod-configdb-0:/init.js
-  kubectl cp ./config/mongo/init-configserver.js myserver/mongod-configdb-1:/init.js
-
-  kubectl exec -it pod/mongo-shard0-0 -n myserver -- sh -c "mongo --port 27017 < init.js"
-  kubectl exec -it pod/mongo-shard1-0 -n myserver -- sh -c "mongo --port 27017 < init.js"
-  kubectl exec -it pod/mongod-configdb-0 -n myserver -- sh -c "mongo --port 27017 < init.js"
-  kubectl exec -it pod/mongod-configdb-1 -n myserver -- sh -c "mongo --port 27017 < init.js"
+  kubectl exec $(kubectl get pod -l "name=mongos" -o name) \
+    -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-collection.js"
 }
 
 stop(){
-  kubectl delete -f config/mongo/configserver.yaml -n myserver
-  kubectl delete -f config/mongo/shard.yaml -n myserver
-  kubectl delete -f config/mongo/router.yaml -n myserver
+  kubectl delete -f ${MONGO_CFG_SERVER} -n $NAMESPACE
+  kubectl delete -f ${MONGO_SHARD} -n $NAMESPACE
+  kubectl delete -f ${MONGO_ROUTER} -n $NAMESPACE
+  kubectl delete -f ${SERVER} -n $NAMESPACE
+  kubectl delete -f ${INGRESS} -n $NAMESPACE
+  kubectl delete -f ${MUTAL_VOLUME} -n $NAMESPACE
 
-  kubectl delete -f config/server.yaml -n myserver
-  kubectl delete -f config/ingress.yaml -n myserver
-  kubectl delete namespace myserver
+  kubectl delete namespace $NAMESPACE
 }
 
 clean(){
-	kubectl delete all --all -n myserver
+	kubectl delete all --all -n $NAMESPACE
 }
+
 CMD=$1
 
 case $CMD in
@@ -64,7 +79,7 @@ case $CMD in
     ;;
 
   "clean")
-    echo "Cleaning up server named 'myserver'"
+    echo "Cleaning up server named '${NAMESPACE}'"
     clean
     ;;
 

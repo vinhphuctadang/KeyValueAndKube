@@ -10,10 +10,11 @@ spec:
   serviceName: "shard0-service"
   replicas: 1 # for simplicy, without creating many volume
   selector:
-    matchLabels: # TODO: Explore more about this selector's selection behavior
+    matchLabels: # This will search for matched pod's label having matched 'name' value in the 'set of labels'
       name: mongo-shard0
   template:
     metadata:
+      name: mongo-shard0
       labels:
         name: mongo-shard0
     spec:
@@ -33,9 +34,13 @@ spec:
           volumeMounts:
             - name: my-db-storage
               mountPath: /data/db
+            - name: config-volume
+              mountPath: /config
   volumeClaimTemplates:
   - metadata:
       name: my-db-storage
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "ssd"
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: standard
@@ -57,14 +62,15 @@ spec:
       name: mongo-shard1
   template:
     metadata:
+      name: mongo-shard1
       labels:
         name: mongo-shard1
     spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
-          image: mongo
           command:
+            image: mongo
             - mongod
             - "--port"
             - "27017"
@@ -76,9 +82,13 @@ spec:
           volumeMounts:
             - name: my-db-storage
               mountPath: /data/db
+            - name: config-volume
+              mountPath: /config
   volumeClaimTemplates:
   - metadata:
       name: my-db-storage
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "ssd"
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: standard

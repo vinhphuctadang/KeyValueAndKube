@@ -25,6 +25,9 @@ spec:
           - "--configsvr"
           - "--replSet"
           - "configserver"
+        volumeMounts:
+          - name: config-volume
+            mountPath: /config
 ---
 # expose config servers
 apiVersion: v1
