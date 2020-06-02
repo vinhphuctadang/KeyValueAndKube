@@ -1,7 +1,6 @@
 '''
 CONSTANTS
 '''
-
 MONGO_CFG_SERVER="k8s/dev/mongo/configserver.yaml"
 MONGO_SHARD="k8s/dev/mongo/shard.yaml"
 MONGO_ROUTER="k8s/dev/mongo/router.yaml"
@@ -42,7 +41,8 @@ start(){
   kubectl exec pod/mongod-configdb-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-configserver.js"
   kubectl exec pod/mongod-configdb-1 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-configserver.js"
 
-  
+  kubectl exec $(kubectl get pod -l "name=mongos" -o name) \
+    -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/init-collection.js"
 }
 
 stop(){
