@@ -1,7 +1,7 @@
 
 # CONSTANTS
-MONGO_CFG_SERVER="k8s/dev/mongo/configserver.yaml"
-MONGO_SHARD="k8s/dev/mongo/shard.yaml"
+MONGO_CFG_SERVER="k8s/dev/mongo/configserver.yaml" # config for mongo config server
+MONGO_SHARD="k8s/dev/mongo/shard.yaml" # config for mongo shards
 MONGO_ROUTER="k8s/dev/mongo/router.yaml"
 
 MUTAL_VOLUME="k8s/dev/config-volume.yaml"
@@ -58,7 +58,7 @@ mongoInit(){
 
   kubectl exec $(kubectl get pod -l "name=mongos" -n myserver -o name) \
     -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-router.js"
-    
+
   kubectl exec $(kubectl get pod -l "name=mongos" -n myserver -o name) \
     -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-collection.js"
 }
@@ -111,7 +111,7 @@ case $CMD in
     clean
     ;;
 
-  "waitAndInit")
+  "waitAndInit") # This will wait for components to completely boot up and automatically call mongoInit, that's it. Should only use this command for debugging purpose
     waitAndInit
     ;;
 

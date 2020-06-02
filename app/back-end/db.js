@@ -4,10 +4,19 @@ const mongoose = require('mongoose')
 // mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versionsmongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versions
 const MONGO_HOST = process.env.MONGO_HOST || 'localhost'
 
+// echo the current HOST
 console.log('DB HOST:', MONGO_HOST)
 
+mongoose.connect(`mongodb://${MONGO_HOST}:27017/test`,
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false, // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versionsmongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versions
+    reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+    reconnectInterval: 3000 // connect again every 3000ms if failure occurs
+  }
+);
 
-mongoose.connect(`mongodb://${MONGO_HOST}:27017/test`, {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versionsmongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versions
 var schema = new mongoose.Schema({ key: 'string', value: 'string' });
 var KeyValue = mongoose.model('KeyValue', schema);
 
