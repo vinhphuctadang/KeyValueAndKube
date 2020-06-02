@@ -22,6 +22,11 @@ migrate(){ # migrate from docker --> minikube
   docker save ${img} | (eval $(minikube docker-env) && docker load)
 }
 
+serverInit(){
+  kubectl apply -f ${SERVER} -n $NAMESPACE
+  kubectl apply -f ${INGRESS} -n $NAMESPACE
+}
+
 bootUp(){
   echo "Create server namespace called '${NAMESPACE}'"
   kubectl create namespace $NAMESPACE
@@ -29,8 +34,6 @@ bootUp(){
   kubectl apply -f ${MONGO_CFG_SERVER} -n $NAMESPACE # start mongo config servers and their service
   kubectl apply -f ${MONGO_SHARD} -n $NAMESPACE # start 2 shards with persistent volumes
   kubectl apply -f ${MONGO_ROUTER} -n $NAMESPACE # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
-  kubectl apply -f ${SERVER} -n $NAMESPACE
-  kubectl apply -f ${INGRESS} -n $NAMESPACE
 }
 
 waitBootComplete(){
@@ -55,17 +58,18 @@ mongoInit(){
   kubectl exec pod/mongo-shard0-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-shard0.js"
   kubectl exec pod/mongo-shard1-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-shard1.js"
 
-
-  kubectl exec $(kubectl get pod -l "name=mongos" -n myserver -o name) \
+  
+  kubectl exec $(kubectl get pod -l "name=mongos" -n $NAMESPACE -o name) \
     -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-router.js"
 
-  kubectl exec $(kubectl get pod -l "name=mongos" -n myserver -o name) \
+  kubectl exec $(kubectl get pod -l "name=mongos" -n $NAMESPACE -o name) \
     -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-collection.js"
 }
 
 waitAndInit(){
   waitBootComplete
   mongoInit
+  serverInit
 }
 
 start(){
@@ -124,7 +128,7 @@ case $CMD in
     ;;
 
   "migrate")
-    migrate
+    migrate $@
     ;;
 
   *)
