@@ -139,6 +139,10 @@ case $CMD in
   "migrate")
     migrate $@
     ;;
+    
+  "ingress")
+    kubectl get ingress -n myserver
+    ;;
 
   *)
     echo "unknown command"

@@ -56,16 +56,8 @@ Simply run
 ./cmd.sh start
 ```
 
-Following lines will run (if you run ``./cmd.sh start`` then you won't need to run the next lines):
-```
-kubectl create namespace myserver
-kubectl apply -f config/mongo/configserver.yaml -n myserver # start mongo config servers and their service
-kubectl apply -f config/mongo/shard.yaml -n myserver # start 2 shards with persistent volumes
-kubectl apply -f config/mongo/router.yaml -n myserver # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
+**Notes:** In case the 'mongo' init failed due to mongo component not finishing their booting actions, we should run ``./cmd.sh initMongo`` again
 
-kubectl apply -f config/server.yaml -n myserver # start the node app, as a server configured in server.yaml
-kubectl apply -f config/ingress.yaml -n myserver # ingress for accessing the server app over internet
-```
 3. Inspect the address of our server ingress:
   ``kubectl get ingress -n myserver`` (since our namespace has only one ingress, there is only one externally visible IP address)
 
@@ -80,5 +72,11 @@ key-value-ingress   <none>   *       172.17.0.3   80      21m
 ./cmd.sh clean
 ```
 # Common failure:
+- Kubectl not found => Check for kubectl installation on kubectl homepage
+- You see the line:
+``In case this script failed, mostly because components are not booting up completely, you should run ./cmd.sh mongoInit again``, first you should check if all mongo components are initialized properly or not, then if something looks like error, you should run ``./cmd.sh mongoInit``
+- You cannot find the server IP:
+Simply type ``./cmd.sh ingress`` then it should show the IP where you could have access to 
 
 ## More about application deployment and devops???
+Inbox me via Skype: worldhello1604@outlook.com
