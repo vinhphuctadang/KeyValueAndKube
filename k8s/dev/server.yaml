@@ -24,7 +24,7 @@ spec:
         - containerPort: 8000 # port 'inside' container
         env:
           - name: MONGO_HOST # make server discover the mongo service
-            value: "mongo.myserver.svc.cluster.local"
+            value: "mongo.default.svc.cluster.local"
 ---
 apiVersion: v1
 kind: Service
