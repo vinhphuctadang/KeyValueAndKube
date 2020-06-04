@@ -108,6 +108,8 @@ case $CMD in
     stop
     ;;
 
+
+############ For debugging purpose ##############
   "clean") # DO NOT USE THIS IN PRODUCTION.N.N
     echo "Cleaning up server"
     clean
@@ -129,7 +131,7 @@ case $CMD in
   "ingress")
     kubectl get ingress
     ;;
-
+#####################################################
   *)
     echo "unknown command"
     ;;

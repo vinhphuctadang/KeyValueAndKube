@@ -12,6 +12,7 @@ mongoose.connect(`mongodb://${MONGO_HOST}:27017/test`,
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false, // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versionsmongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}); // useFindAndModify disable useFindOneAndModify to make following calls 'compatible' with old versions
+    poolSize: 100, // 100 connection to mongo
   }
 );
 
