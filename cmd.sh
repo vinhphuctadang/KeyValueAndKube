@@ -131,6 +131,12 @@ case $CMD in
   "ingress")
     kubectl get ingress
     ;;
+  "restartServer") # in case server failed its initialization phase (mostly due to mongo errors), we could manually restart the server
+    echo 'Restarting our server'
+    kubectl rollout restart deployment/key-value-deployment
+    
+    ;;
+
 #####################################################
   *)
     echo "unknown command"
