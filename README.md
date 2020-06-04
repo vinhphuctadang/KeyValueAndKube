@@ -6,9 +6,10 @@
 - 2 pods running the main app (explore /app for details) with its static volume (node app won't make any changes to its volume).
 - Sharded mongodb:
   The db system has:
-  - 2 shards, 1 replica for each shard, 1 persistent volume for each replica
+  - a config volume for storing scripts of mongo init
+  - 2 shards, 2 replica for each shard, 1 persistent volume for each replica
   - 2 config servers, with its own volume, no persistent volume (maybe bad practice)
-  - 2 mongo router pod (mongos)
+  - 2 mongo router pods (mongos)
   - a mongo service
 
 ## To execute:
@@ -76,7 +77,7 @@ key-value-ingress   <none>   *       172.17.0.3   80      21m
 - You see the line:
 ``In case this script failed, mostly because components are not booting up completely, you should run ./cmd.sh mongoInit again``, first you should check if all mongo components are initialized properly or not, then if something looks like error, you should run ``./cmd.sh mongoInit``
 - You cannot find the server IP:
-Simply type ``./cmd.sh ingress`` then it should show the IP where you could have access to 
+Simply type ``./cmd.sh ingress`` then it should show the IP where you could have access to
 
 ## More about application deployment and devops???
 Inbox me via Skype: worldhello1604@outlook.com
