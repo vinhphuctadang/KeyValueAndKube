@@ -7,7 +7,7 @@ MONGO_ROUTER="k8s/dev/mongo/router.yaml"
 MUTAL_VOLUME="k8s/dev/config-volume.yaml"
 SERVER="k8s/dev/server.yaml"
 INGRESS="k8s/dev/ingress.yaml"
-NAMESPACE="myserver"
+# NAMESPACE="default"
 SCRIPT_DIR="k8s/scripts"
 
 build(){
@@ -16,130 +16,117 @@ build(){
   docker push vinhphuctadang/key-value-server:latest
 }
 
-migrate(){ # migrate from docker --> minikube
+migrate(){ # migrate from docker --> minikube, use this in case you have docker images already and want to copy it to 'minikube docker'
   img=$2
   echo "Moving ${img} from docker to minikube, without pushing to dockerhub"
   docker save ${img} | (eval $(minikube docker-env) && docker load)
 }
 
-serverInit(){
-  minikube addons enable ingress # enable ingress in order to make server externally visible
-  kubectl apply -f ${SERVER} -n $NAMESPACE
-  kubectl apply -f ${INGRESS} -n $NAMESPACE
-  echo "Sleep for server booting up"
-  sleep 5
-  echo "======= Ingress information ======="
-  kubectl get ingress -n $NAMESPACE
-}
-
-bootUp(){
-  echo "Create server namespace called '${NAMESPACE}'"
-  kubectl create namespace $NAMESPACE
-  kubectl apply -f ${MUTAL_VOLUME} -n $NAMESPACE # create a 'mutal' volume, will be referred by configservers, shards and mongo routers
-  kubectl apply -f ${MONGO_CFG_SERVER} -n $NAMESPACE # start mongo config servers and their service
-  kubectl apply -f ${MONGO_SHARD} -n $NAMESPACE # start 2 shards with persistent volumes
-  kubectl apply -f ${MONGO_ROUTER} -n $NAMESPACE # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
-}
-
-waitBootComplete(){
-  while [[ $(kubectl get pod -n myserver -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') == *"False"* ]]; do
-    echo "Sleep 1 second and while waiting for components to complete booting up"
-    sleep 1
-  done
-}
-
 copyScripts(){
-  echo "Copying mongo init scripts to config-volume volume (via POD mongod-configdb-0)"
-  kubectl cp ${SCRIPT_DIR} mongod-configdb-0:/config -n $NAMESPACE
+  echo "Copying mongo init scripts to config-volume volume (via POD mongod-configdb-0) ..."
+  kubectl cp ${SCRIPT_DIR} mongod-configdb-0:/config
 }
 
 mongoInit(){
+  kubectl apply -f ${MUTAL_VOLUME}  # create a 'mutal' volume, will be referred by configservers, shards and mongo routers
+  kubectl apply -f ${MONGO_CFG_SERVER}  # start mongo config servers and their service
+  kubectl apply -f ${MONGO_SHARD}  # start 2 shards with persistent volumes
+  kubectl apply -f ${MONGO_ROUTER}  # start mongo router for exposing mongodb to our node app (app written in nodejs, in /app)
 
-  echo "Waiting for 30s for mongo components to complete boot up"
+  while [[ $(kubectl get pod -n myserver -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') == *"False"* ]]; do
+    echo "Waiting for mongo components' readiness"
+    sleep 1
+  done
+
   sleep 30
-  echo "Next copy k8s/scripts to created config-volume"
+  echo "Next copy k8s/scripts to create config-volume"
   copyScripts
 
-  kubectl exec pod/mongod-configdb-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-configserver.js" # init on one replica only
-  # afterward
-  # use for loop instead
-  kubectl exec pod/mongo-shard0-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-shard0.js"
-  kubectl exec pod/mongo-shard1-0 -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-shard1.js"
+  echo "After that, run configs"
+  kubectl exec pod/mongod-configdb-0  -- sh -c "mongo --port 27017 < /config/scripts/init-configserver.js" # init on one replica only
+  kubectl exec pod/mongo-shard0-0  -- sh -c "mongo --port 27017 < /config/scripts/init-shard0.js"
+  kubectl exec pod/mongo-shard1-0  -- sh -c "mongo --port 27017 < /config/scripts/init-shard1.js"
 
+  kubectl exec $(kubectl get pod -l "name=mongos"  -o name) \
+     -- sh -c "mongo --port 27017 < /config/scripts/init-router.js"
 
-  kubectl exec $(kubectl get pod -l "name=mongos" -n $NAMESPACE -o name) \
-    -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-router.js"
+  kubectl exec $(kubectl get pod -l "name=mongos"  -o name) \
+     -- sh -c "mongo --port 27017 < /config/scripts/init-collection.js"
 
-  kubectl exec $(kubectl get pod -l "name=mongos" -n $NAMESPACE -o name) \
-    -n $NAMESPACE -- sh -c "mongo --port 27017 < /config/scripts/init-collection.js"
-  echo "In case this script failed, mostly because components are not booting up completely, you should run ./cmd.sh mongoInit again"
+  echo "In case this script failed, mostly because mongo components are not booting up completely, you should run './cmd.sh mongoInit' again"
 }
 
-waitAndInit(){
-  waitBootComplete
+serverInit(){
+  minikube addons enable ingress # enable ingress in order to make server externally visible
+  kubectl apply -f ${SERVER}
+  kubectl apply -f ${INGRESS}
+  echo "Sleep to wait for server to complete boot itself up"
+  sleep 5
+  echo "======= Ingress information ======="
+  kubectl get ingress
+}
+
+# waitComponentsReadiness(){
+#   while [[ $(kubectl get pod -n myserver -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') == *"False"* ]]; do
+#     echo "Sleep 1 second while waiting for components to be ready"
+#     sleep 1
+#   done
+# }
+
+start(){
   mongoInit
   serverInit
 }
 
-start(){
-  bootUp
-  waitAndInit
-}
-
 stop(){
-  kubectl delete -f ${MONGO_CFG_SERVER} -n $NAMESPACE
-  kubectl delete -f ${MONGO_SHARD} -n $NAMESPACE
-  kubectl delete -f ${MONGO_ROUTER} -n $NAMESPACE
-  kubectl delete -f ${SERVER} -n $NAMESPACE
-  kubectl delete -f ${INGRESS} -n $NAMESPACE
-  kubectl delete -f ${MUTAL_VOLUME} -n $NAMESPACE
-
-  kubectl delete namespace $NAMESPACE
+  kubectl delete -f ${MONGO_CFG_SERVER}
+  kubectl delete -f ${MONGO_SHARD}
+  kubectl delete -f ${MONGO_ROUTER}
+  kubectl delete -f ${SERVER}
+  kubectl delete -f ${INGRESS}
+  kubectl delete -f ${MUTAL_VOLUME}
 }
 
 clean(){
-	kubectl delete all --all -n $NAMESPACE
+	kubectl delete all --all
 }
 
 CMD=$1
 
 case $CMD in
-  "build")
+  "build") # build the current server to docker
     echo "Dockerizing server..."
     build
     ;;
 
-  "start")
+  "start") # Run this one to start components
     echo "Starting components..."
     start
     ;;
 
-  "stop")
+  "stop") # Run this one to stop components
     echo "Stoping components..."
     stop
     ;;
 
-  "clean")
-    echo "Cleaning up server named '${NAMESPACE}'"
+  "clean") # DO NOT USE THIS IN PRODUCTION.N.N
+    echo "Cleaning up server"
     clean
-    ;;
-
-  "waitAndInit") # This will wait for components to completely boot up and automatically call mongoInit, that's it. Should only use this command for debugging purpose
-    waitAndInit
     ;;
 
   "mongoInit")
     echo "Initializing mongo..."
     mongoInit
     ;;
-  "copyScripts")
+
+  "copyScripts") # To copy into config-volume via POD mongod-configdb-0, only for debugging purpose
     copyScripts
     ;;
 
   "migrate")
     migrate $@
     ;;
-    
+
   "ingress")
     kubectl get ingress -n myserver
     ;;
