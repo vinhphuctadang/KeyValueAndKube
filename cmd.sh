@@ -7,7 +7,6 @@ MONGO_ROUTER="k8s/dev/mongo/router.yaml"
 MUTAL_VOLUME="k8s/dev/config-volume.yaml"
 SERVER="k8s/dev/server.yaml"
 INGRESS="k8s/dev/ingress.yaml"
-# NAMESPACE="default"
 SCRIPT_DIR="k8s/scripts"
 
 build(){
@@ -128,7 +127,7 @@ case $CMD in
     ;;
 
   "ingress")
-    kubectl get ingress -n myserver
+    kubectl get ingress
     ;;
 
   *)
