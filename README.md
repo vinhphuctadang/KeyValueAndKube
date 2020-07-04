@@ -1,4 +1,4 @@
-# Key Value server and Kubenete deployment
+# Key Value server and Kubernetes deployment
 
 ## Structure:
 
