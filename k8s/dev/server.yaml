@@ -1,5 +1,5 @@
 ---
-# Run built node app hello-kube with 3 replica
+# Run built node app hello-kube with 2 replica
 apiVersion: apps/v1
 kind: Deployment
 metadata:
